@@ -1,0 +1,29 @@
+[Unit]
+Description=Minecraft "%i" Server
+After=local-fs.target network.target
+
+[Service]
+WorkingDirectory=/home/minecraft/%i
+User=minecraft
+Group=minecraft
+Type=forking
+
+# Set default memory values
+Environment="MCMINMEM=512M" "MCMAXMEM=1024M" "SHUTDOWN_DELAY=5" "POST_SHUTDOWN_DELAY=10"
+# Change memory values in environment file
+EnvironmentFile=-/home/minecraft/%i/server.conf
+
+# Run it as a non-root user in a specific directory
+ExecStart=/usr/bin/screen -h 1024 -dmS mc-%i ./server_start.sh
+
+ExecStop=/usr/bin/screen -p 0 -S mc-%i -X eval 'stuff "say Server shutdown in-progress! Saving map..."\\015'
+ExecStop=/bin/sh -c '/bin/sleep ${SHUTDOWN_DELAY}'
+ExecStop=/usr/bin/screen -p 0 -S mc-%i -X eval 'stuff "save-all"\\015'
+ExecStop=/usr/bin/screen -p 0 -S mc-%i -X eval 'stuff "stop"\\015'
+ExecStop=/bin/sh -c '/bin/sleep ${POST_SHUTDOWN_DELAY}'
+
+Restart=on-failure
+RestartSec=30s
+
+[Install]
+WantedBy=multi-user.target

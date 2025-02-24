@@ -1,0 +1,34 @@
+[Unit]
+Description=Rust Server
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=steam
+Group=steam
+WorkingDirectory=/home/steam/rust
+Type=simple
+TimeoutSec=900
+KillSignal=SIGINT
+
+Environment="SteamAppId=258550" "SEED=1179508741" "WORLD_SIZE=3500"
+Environment=LD_LIBRARY_PATH=/home/rust/server:$LD_LIBRARY_PATH
+
+ExecStartPre=/usr/games/steamcmd +@sSteamCmdForcePlatformType linux +force_install_dir /home/steam/rust +login anonymous +app_update ${SteamAppId} +quit
+ExecStart=/home/steam/rust/RustDedicated -batchmode \
+    +server.port 28015 \
+    +server.level "Procedural Map" \
+    +server.seed 1179508741 \
+    +server.worldsize 3500 \
+    +server.maxplayers 10 \
+    +server.description "Bingus Amongus" \
+    +server.identity "procedural_${SEED}_${WORLD_SIZE}" \
+    +rcon.port 28016 \
+    +rcon.password "cheese" \
+    +rcon.web 1
+
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
